@@ -8,10 +8,15 @@ export const ExpenseProvider = ({ children }) => {
     const [expenses, setExpenses] = useState([]);
     const [loading, setLoading] = useState(true);
 
+    // Automatic URL switching
+    const API_BASE_URL = import.meta.env.PROD
+        ? 'https://smart-expense-tracker-pgf9.onrender.com/api/expenses'
+        : 'http://localhost:5000/api/expenses';
+
     // Fetch expenses from Backend
     const fetchExpenses = async () => {
         try {
-            const res = await fetch('http://localhost:5000/api/expenses');
+            const res = await fetch(API_BASE_URL);
             const data = await res.json();
             setExpenses(data);
             setLoading(false);
@@ -27,7 +32,7 @@ export const ExpenseProvider = ({ children }) => {
 
     const addExpense = async (expense) => {
         try {
-            const res = await fetch('http://localhost:5000/api/expenses', {
+            const res = await fetch(API_BASE_URL, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(expense)
@@ -41,7 +46,7 @@ export const ExpenseProvider = ({ children }) => {
 
     const deleteExpense = async (id) => {
         try {
-            await fetch(`http://localhost:5000/api/expenses/${id}`, { method: 'DELETE' });
+            await fetch(`${API_BASE_URL}/${id}`, { method: 'DELETE' });
             setExpenses(expenses.filter(e => e._id !== id));
         } catch (error) {
             console.error('Error deleting expense:', error);
@@ -50,7 +55,7 @@ export const ExpenseProvider = ({ children }) => {
 
     const updateExpense = async (id, updatedData) => {
         try {
-            const res = await fetch(`http://localhost:5000/api/expenses/${id}`, {
+            const res = await fetch(`${API_BASE_URL}/${id}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(updatedData)
