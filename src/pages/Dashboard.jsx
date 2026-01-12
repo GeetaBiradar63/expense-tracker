@@ -1,3 +1,4 @@
+import { useNavigate } from 'react-router-dom';
 import { useExpenses } from '../context/ExpenseContext';
 import { useAuth } from '../context/AuthContext';
 import { useMemo } from 'react';
@@ -7,6 +8,7 @@ import { TrendingUp, TrendingDown, DollarSign, CreditCard } from 'lucide-react';
 const Dashboard = () => {
     const { user } = useAuth();
     const { expenses } = useExpenses();
+    const navigate = useNavigate();
 
     const stats = useMemo(() => {
         const now = new Date();
@@ -36,7 +38,7 @@ const Dashboard = () => {
                     <h1 className="page-title">Dashboard</h1>
                     <p style={{ color: 'var(--text-muted)' }}>Welcome back, {user?.name}</p>
                 </div>
-                <button className="btn btn-primary" onClick={() => window.location.href = '/add'}>
+                <button className="btn btn-primary" onClick={() => navigate('/add')}>
                     + Add New
                 </button>
             </div>
