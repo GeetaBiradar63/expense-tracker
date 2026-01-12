@@ -6,46 +6,64 @@ export const useExpenses = () => useContext(ExpenseContext);
 
 export const ExpenseProvider = ({ children }) => {
     const [expenses, setExpenses] = useState([]);
+    const [loading, setLoading] = useState(true);
+
+    // Fetch expenses from Backend
+    const fetchExpenses = async () => {
+        try {
+            const res = await fetch('http://localhost:5000/api/expenses');
+            const data = await res.json();
+            setExpenses(data);
+            setLoading(false);
+        } catch (error) {
+            console.error('Error fetching expenses:', error);
+            setLoading(false);
+        }
+    };
 
     useEffect(() => {
-        const stored = localStorage.getItem('finance_expenses');
-        if (stored) {
-            setExpenses(JSON.parse(stored));
-        } else {
-            // Seed some data for "WOW" effect if empty
-            const initialData = [
-                { id: 1, date: '2026-01-12', amount: 250, category: 'Food', payment: 'UPI', note: 'Lunch' },
-                { id: 2, date: '2026-01-12', amount: 1200, category: 'Shopping', payment: 'Card', note: 'New Shirt' },
-                { id: 3, date: '2026-01-11', amount: 500, category: 'Travel', payment: 'Cash', note: 'Taxi' },
-                { id: 4, date: '2026-01-10', amount: 3500, category: 'Food', payment: 'Card', note: 'Dinner Party' },
-                { id: 5, date: '2026-01-05', amount: 1500, category: 'Bills', payment: 'UPI', note: 'Electricity' },
-            ];
-            setExpenses(initialData);
-            localStorage.setItem('finance_expenses', JSON.stringify(initialData));
-        }
+        fetchExpenses();
     }, []);
 
-    const addExpense = (expense) => {
-        const newExpense = { ...expense, id: Date.now() };
-        const updated = [newExpense, ...expenses];
-        setExpenses(updated);
-        localStorage.setItem('finance_expenses', JSON.stringify(updated));
+    const addExpense = async (expense) => {
+        try {
+            const res = await fetch('http://localhost:5000/api/expenses', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(expense)
+            });
+            const newExpense = await res.json();
+            setExpenses([newExpense, ...expenses]);
+        } catch (error) {
+            console.error('Error adding expense:', error);
+        }
     };
 
-    const deleteExpense = (id) => {
-        const updated = expenses.filter(e => e.id !== id);
-        setExpenses(updated);
-        localStorage.setItem('finance_expenses', JSON.stringify(updated));
+    const deleteExpense = async (id) => {
+        try {
+            await fetch(`http://localhost:5000/api/expenses/${id}`, { method: 'DELETE' });
+            setExpenses(expenses.filter(e => e._id !== id));
+        } catch (error) {
+            console.error('Error deleting expense:', error);
+        }
     };
 
-    const updateExpense = (id, updatedData) => {
-        const updated = expenses.map(e => (e.id === id ? { ...e, ...updatedData } : e));
-        setExpenses(updated);
-        localStorage.setItem('finance_expenses', JSON.stringify(updated));
+    const updateExpense = async (id, updatedData) => {
+        try {
+            const res = await fetch(`http://localhost:5000/api/expenses/${id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(updatedData)
+            });
+            const updated = await res.json();
+            setExpenses(expenses.map(e => (e._id === id ? updated : e)));
+        } catch (error) {
+            console.error('Error updating expense:', error);
+        }
     };
 
     return (
-        <ExpenseContext.Provider value={{ expenses, addExpense, deleteExpense, updateExpense }}>
+        <ExpenseContext.Provider value={{ expenses, addExpense, deleteExpense, updateExpense, loading }}>
             {children}
         </ExpenseContext.Provider>
     );

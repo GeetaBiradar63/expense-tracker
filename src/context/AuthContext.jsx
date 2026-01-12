@@ -9,7 +9,7 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Check local storage for existing session
+    // Check local storage for token/user
     const storedUser = localStorage.getItem('finance_user');
     if (storedUser) {
       setUser(JSON.parse(storedUser));
@@ -17,13 +17,25 @@ export const AuthProvider = ({ children }) => {
     setLoading(false);
   }, []);
 
-  const login = (email, password) => {
-    // Mock login - Accept any email/password for demo
-    // In real app, validate against DB
-    const mockUser = { id: 1, name: 'Demo User', email };
-    setUser(mockUser);
-    localStorage.setItem('finance_user', JSON.stringify(mockUser));
-    return true;
+  const login = async (email, password) => {
+    try {
+      const res = await fetch('http://localhost:5000/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password })
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.msg);
+
+      setUser(data.user);
+      localStorage.setItem('finance_user', JSON.stringify(data.user)); // Keep for session persistence
+      return true;
+    } catch (error) {
+      console.error(error);
+      alert(error.message);
+      return false;
+    }
   };
 
   const logout = () => {
@@ -31,11 +43,25 @@ export const AuthProvider = ({ children }) => {
     localStorage.removeItem('finance_user');
   };
 
-  const register = (name, email, password) => {
-    const mockUser = { id: 1, name, email };
-    setUser(mockUser);
-    localStorage.setItem('finance_user', JSON.stringify(mockUser));
-    return true;
+  const register = async (name, email, password) => {
+    try {
+      const res = await fetch('http://localhost:5000/api/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, email, password })
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.msg);
+
+      setUser(data.user);
+      localStorage.setItem('finance_user', JSON.stringify(data.user));
+      return true;
+    } catch (error) {
+      console.error(error);
+      alert(error.message);
+      return false;
+    }
   };
 
   return (
